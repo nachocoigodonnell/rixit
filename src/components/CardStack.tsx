@@ -19,8 +19,12 @@ const CardStack: React.FC = () => {
           <div className="absolute inset-2 rounded-xl bg-opacity-20 bg-white flex items-center justify-center overflow-hidden">
             <div className="absolute w-32 h-32 rounded-full bg-white/10 blur-xl"></div>
             {i === 0 && (
-              <div className="text-white font-bold text-4xl transform -rotate-6 mt-4 drop-shadow-lg">
-                Rixit
+              <div className="flex items-center justify-center transform -rotate-6">
+                <img 
+                  src="/image/rixit-logo.png" 
+                  alt="Rixit Logo" 
+                  className="w-28 h-auto drop-shadow-lg"
+                />
               </div>
             )}
           </div>

@@ -17,9 +17,9 @@ const WelcomePage: React.FC = () => {
   }, []);
 
   return (
-    <>
+    <div className="relative overflow-hidden">
       <FloatingEffects />
-      <section className="text-center min-h-[80vh] flex flex-col items-center justify-center py-10 px-4">
+      <section className="relative z-10 text-center min-h-[80vh] flex flex-col items-center justify-center py-10 px-4">
         <div className={`transform transition-all duration-1000 ${showContent ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
           <h2 className="text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
             ¡Bienvenid@ a Rixit!
@@ -52,7 +52,7 @@ const WelcomePage: React.FC = () => {
           </p>
         </div>
       </section>
-    </>
+    </div>
   );
 };
 

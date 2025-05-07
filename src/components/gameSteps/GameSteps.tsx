@@ -4,8 +4,7 @@ import ClueStep from './ClueStep';
 import SubmitStep from './SubmitStep';
 import VoteStep from './VoteStep';
 import RevealStep from './RevealStep';
-import WaitingRoom from '../WaitingRoom';
-
+import WaitingRoom from '../../components/WaitingRoom';
 /**
  * Component that renders the appropriate game step based on the current game stage.
  */
