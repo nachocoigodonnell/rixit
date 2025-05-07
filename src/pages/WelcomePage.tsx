@@ -7,6 +7,8 @@ import FloatingEffects from '../components/FloatingEffects';
 const WelcomePage: React.FC = () => {
   const navigate = useNavigate();
   const [showContent, setShowContent] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [destination, setDestination] = useState('');
 
   // Efecto de aparición gradual
   useEffect(() => {
@@ -16,9 +18,25 @@ const WelcomePage: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  // Efecto para manejar la navegación después de la transición
+  useEffect(() => {
+    if (isTransitioning && destination) {
+      const timer = setTimeout(() => {
+        navigate(destination);
+      }, 450); // Tiempo para que las burbujas se junten
+      return () => clearTimeout(timer);
+    }
+  }, [isTransitioning, destination, navigate]);
+
+  // Función para iniciar la transición
+  const handleNavigation = (path: string) => {
+    setIsTransitioning(true);
+    setDestination(path);
+  };
+
   return (
     <div className="relative overflow-hidden">
-      <FloatingEffects />
+      <FloatingEffects transitioning={isTransitioning} />
       <section className="relative z-10 text-center min-h-[80vh] flex flex-col items-center justify-center py-10 px-4">
         <div className={`transform transition-all duration-1000 ${showContent ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
           <h2 className="text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
@@ -34,13 +52,13 @@ const WelcomePage: React.FC = () => {
 
           <div className="flex flex-col sm:flex-row gap-4 w-full max-w-sm mx-auto mt-8 justify-center items-center">
             <Button
-              onClick={() => navigate('/create')}
+              onClick={() => handleNavigation('/create')}
               className="bg-primary hover:bg-primary/80 text-white transform transition-transform hover:scale-105"
             >
               Crear partida
             </Button>
             <Button
-              onClick={() => navigate('/unirse')}
+              onClick={() => handleNavigation('/unirse')}
               className="bg-secondary hover:bg-secondary/80 text-white transform transition-transform hover:scale-105"
             >
               Unirse a partida

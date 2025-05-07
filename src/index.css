@@ -14,20 +14,16 @@ button {
 }
 
 /* Animaciones personalizadas */
+@keyframes blobMorph {
+  0%   { border-radius: 42% 58% 43% 57% / 42% 42% 58% 58%; }
+  25%  { border-radius: 55% 45% 60% 40% / 55% 60% 40% 45%; }
+  50%  { border-radius: 40% 60% 35% 65% / 40% 35% 65% 60%; }
+  75%  { border-radius: 60% 40% 55% 45% / 60% 55% 45% 40%; }
+  100% { border-radius: 42% 58% 43% 57% / 42% 42% 58% 58%; }
+}
+
 @keyframes float {
-  0% {
-    transform: translateY(0) translateX(0) scale(1);
-  }
-  33% {
-    transform: translateY(-15px) translateX(10px) scale(1.03);
-  }
-  50% {
-    transform: translateY(-25px) translateX(5px) scale(0.98);
-  }
-  66% {
-    transform: translateY(-10px) translateX(-10px) scale(1.02);
-  }
-  100% {
-    transform: translateY(5px) translateX(-5px) scale(1);
-  }
+  0%   { transform: translateY(0) translateX(0) scale(1); }
+  50%  { transform: translateY(-25px) translateX(10px) scale(1.05); }
+  100% { transform: translateY(0) translateX(0) scale(1); }
 } 

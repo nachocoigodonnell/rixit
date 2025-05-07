@@ -1,49 +1,53 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-const FloatingEffects: React.FC = () => {
-  // Crear varias burbujas flotantes
+interface FloatingEffectsProps {
+  transitioning?: boolean;
+}
+
+const blobColors = [
+  'rgba(100,108,255,0.6)',   // primario
+  'rgba(255,100,108,0.6)',   // secundario
+  'rgba(148,100,255,0.6)',
+  'rgba(100,200,255,0.6)',
+];
+
+const FloatingEffects: React.FC<FloatingEffectsProps> = ({ transitioning = false }) => {
+  // Generamos blobs con posiciones y tamaños iniciales consistentes
+  const [blobs] = useState(() =>
+    Array.from({ length: 8 }).map(() => ({
+      left: Math.random() * 100,
+      top: Math.random() * 100,
+      size: 200 + Math.random() * 200, // 200-400 px
+      duration: 8 + Math.random() * 8, // 8-16 s
+      delay: Math.random() * 4,
+      color: blobColors[Math.floor(Math.random() * blobColors.length)],
+    }))
+  );
+
   return (
-    <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-      {[...Array(20)].map((_, i) => (
-        <div 
+    <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+      {blobs.map((blob, i) => (
+        <div
           key={i}
-          className="absolute rounded-full shadow-xl opacity-30 transition-all duration-700 ease-in-out"
+          className="absolute rounded-full mix-blend-screen blur-2xl"
           style={{
-            width: `${getRandomBubbleSize()}px`,
-            height: `${getRandomBubbleSize()}px`,
-            background: getBubbleGradient(i % 4),
-            backdropFilter: 'blur(2px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            animation: `float ${5 + Math.random() * 10}s ease-in-out infinite alternate`,
-            animationDelay: `${Math.random() * 5}s`,
-            boxShadow: 'inset 0 0 20px rgba(255, 255, 255, 0.3), 0 4px 20px rgba(0, 0, 0, 0.1)',
+            width: `${blob.size}px`,
+            height: `${blob.size}px`,
+            background: blob.color,
+            left: transitioning ? '50%' : `${blob.left}%`,
+            top: transitioning ? '50%' : `${blob.top}%`,
+            transform: transitioning
+              ? 'translate(-50%, -50%) scale(0.3)'
+              : 'translate(-50%, -50%)',
+            transition: 'transform 0.8s ease, left 0.8s ease, top 0.8s ease',
+            animation: transitioning
+              ? 'none'
+              : `blobMorph ${blob.duration}s ease-in-out ${blob.delay}s infinite`,
           }}
-        >
-          {/* Brillo de la burbuja */}
-          <div className="absolute w-1/3 h-1/3 bg-white rounded-full opacity-40 top-1/4 left-1/4 blur-sm">
-          </div>
-        </div>
+        />
       ))}
     </div>
   );
-};
-
-// Generar tamaños aleatorios para las burbujas
-const getRandomBubbleSize = (): number => {
-  return 150 + Math.random() * 2; // Tamaños entre 20px y 100px
-};
-
-// Gradientes para las burbujas
-const getBubbleGradient = (index: number): string => {
-  const gradients = [
-    'radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), rgba(100, 108, 255, 0.1))',
-    'radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), rgba(255, 100, 108, 0.1))',
-    'radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), rgba(148, 100, 255, 0.1))',
-    'radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), rgba(100, 200, 255, 0.1))'
-  ];
-  return gradients[index];
 };
 
 export default FloatingEffects; 
