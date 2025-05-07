@@ -53,4 +53,27 @@ button {
   0% { filter: drop-shadow(0 0 2px rgba(255,255,255,0.3)); }
   50% { filter: drop-shadow(0 0 8px rgba(255,255,255,0.8)); }
   100% { filter: drop-shadow(0 0 2px rgba(255,255,255,0.3)); }
+}
+
+/* Perspectiva 3D para las cartas */
+.perspective-500 {
+  perspective: 500px;
+}
+
+/* Efecto de levitación de cartas */
+@keyframes card-float {
+  0% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-4px) rotate(0.5deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
+
+.card-floating {
+  animation: card-float 3s ease-in-out infinite;
+}
+
+/* Brillo en cartas seleccionadas */
+@keyframes card-glow {
+  0% { box-shadow: 0 0 8px 2px rgba(var(--color-primary), 0.2); }
+  50% { box-shadow: 0 0 12px 4px rgba(var(--color-primary), 0.4); }
+  100% { box-shadow: 0 0 8px 2px rgba(var(--color-primary), 0.2); }
 } 
