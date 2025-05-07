@@ -1,53 +1,49 @@
 import React from 'react';
 
 const FloatingEffects: React.FC = () => {
-  // Crear varios elementos flotantes con formas distintas
+  // Crear varias burbujas flotantes
   return (
     <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-      {[...Array(15)].map((_, i) => (
-        <div
+      {[...Array(20)].map((_, i) => (
+        <div 
           key={i}
-          className={`absolute rounded-full opacity-60 ${getRandomShape(i)} border border-white/20`}
+          className="absolute rounded-full shadow-xl opacity-30 transition-all duration-700 ease-in-out"
           style={{
-            width: `${getRandomSize()}px`,
-            height: `${getRandomSize()}px`,
-            background: getRandomGradient(),
+            width: `${getRandomBubbleSize()}px`,
+            height: `${getRandomBubbleSize()}px`,
+            background: getBubbleGradient(i % 4),
+            backdropFilter: 'blur(2px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
             left: `${Math.random() * 100}%`,
             top: `${Math.random() * 100}%`,
             animation: `float ${5 + Math.random() * 10}s ease-in-out infinite alternate`,
             animationDelay: `${Math.random() * 5}s`,
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+            boxShadow: 'inset 0 0 20px rgba(255, 255, 255, 0.3), 0 4px 20px rgba(0, 0, 0, 0.1)',
           }}
-        />
+        >
+          {/* Brillo de la burbuja */}
+          <div className="absolute w-1/3 h-1/3 bg-white rounded-full opacity-40 top-1/4 left-1/4 blur-sm">
+          </div>
+        </div>
       ))}
-      {/* Elemento de prueba para verificar que el componente se renderiza */}
-      <div className="fixed bottom-4 right-4 bg-red-500 text-white px-2 py-1 rounded text-xs opacity-70 z-50">
-        FX activo
-      </div>
     </div>
   );
 };
 
 // Generar tamaños aleatorios para las burbujas
-const getRandomSize = (): number => {
-  return 50 + Math.random() * 150;
+const getRandomBubbleSize = (): number => {
+  return 150 + Math.random() * 2; // Tamaños entre 20px y 100px
 };
 
-// Generar gradientes aleatorios basados en los colores del tema
-const getRandomGradient = (): string => {
+// Gradientes para las burbujas
+const getBubbleGradient = (index: number): string => {
   const gradients = [
-    'radial-gradient(circle, rgba(100, 108, 255, 0.7) 0%, rgba(100, 108, 255, 0) 70%)',
-    'radial-gradient(circle, rgba(255, 100, 108, 0.7) 0%, rgba(255, 100, 108, 0) 70%)',
-    'radial-gradient(circle, rgba(148, 100, 255, 0.7) 0%, rgba(148, 100, 255, 0) 70%)',
-    'radial-gradient(circle, rgba(100, 200, 255, 0.7) 0%, rgba(100, 200, 255, 0) 70%)',
+    'radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), rgba(100, 108, 255, 0.1))',
+    'radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), rgba(255, 100, 108, 0.1))',
+    'radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), rgba(148, 100, 255, 0.1))',
+    'radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), rgba(100, 200, 255, 0.1))'
   ];
-  return gradients[Math.floor(Math.random() * gradients.length)];
-};
-
-// Generar diferentes formas
-const getRandomShape = (index: number): string => {
-  // Alternar entre círculo y cuadrado redondeado
-  return index % 3 === 0 ? 'rounded-3xl' : 'rounded-full';
+  return gradients[index];
 };
 
 export default FloatingEffects; 

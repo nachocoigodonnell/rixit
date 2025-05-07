@@ -8,7 +8,7 @@ const CardStack: React.FC = () => {
         <div
           key={i}
           className={`absolute rounded-2xl shadow-xl w-full h-full transition-all duration-700 ease-in-out
-           bg-gradient-to-br animate-pulse ${getCardColor(i)}`}
+           bg-gradient-to-br ${ i == 4 ? 'animate-pulse' : ''} ${getCardColor(i)}`}
           style={{
             transform: `rotate(${-4 + i * 2}deg) translateY(${i * 4}px)`,
             zIndex: 5 - i,
@@ -37,7 +37,7 @@ const CardStack: React.FC = () => {
 // Función para obtener diferentes colores para las cartas
 const getCardColor = (index: number): string => {
   const colors = [
-    'from-primary to-purple-600',
+    'bg-white',
     'from-secondary to-red-600',
     'from-blue-600 to-primary',
     'from-indigo-600 to-purple-600',
