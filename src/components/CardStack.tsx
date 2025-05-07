@@ -54,7 +54,7 @@ const CardStack: React.FC<CardStackProps> = ({ entering = false, transitioning =
              ${i === 0 ? 'bg-white' : `bg-gradient-to-br animate-pulse ${getCardColor(i)}`}`}
             style={{
               transform,
-              opacity: i === 0 ? 0.9 : opacity,
+              opacity,
               transitionDelay: delay,
               zIndex: 5 - i,
             }}
@@ -66,7 +66,7 @@ const CardStack: React.FC<CardStackProps> = ({ entering = false, transitioning =
                   <img
                     src="/image/rixit-logo.png"
                     alt="Rixit Logo"
-                    className="w-28 h-auto drop-shadow-lg"
+                    className="w-28 h-auto drop-shadow-lg animate-[gentle-float_5s_ease-in-out_infinite]"
                   />
                 </div>
               )}

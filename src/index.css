@@ -26,4 +26,31 @@ button {
   0%   { transform: translateY(0) translateX(0) scale(1); }
   50%  { transform: translateY(-25px) translateX(10px) scale(1.05); }
   100% { transform: translateY(0) translateX(0) scale(1); }
+}
+
+@keyframes heartbeat {
+  0%   { transform: scale(1); }
+  15%  { transform: scale(1.08); }
+  30%  { transform: scale(1); }
+  45%  { transform: scale(1.05); }
+  60%  { transform: scale(1); }
+  100% { transform: scale(1); }
+}
+
+@keyframes gentle-float {
+  0%   { transform: translateY(0) rotate(-6deg); }
+  50%  { transform: translateY(-12px) rotate(-3deg); }
+  100% { transform: translateY(0) rotate(-6deg); }
+}
+
+@keyframes subtle-spin {
+  0% { transform: rotate(-8deg); }
+  50% { transform: rotate(-4deg); }
+  100% { transform: rotate(-8deg); }
+}
+
+@keyframes shimmer {
+  0% { filter: drop-shadow(0 0 2px rgba(255,255,255,0.3)); }
+  50% { filter: drop-shadow(0 0 8px rgba(255,255,255,0.8)); }
+  100% { filter: drop-shadow(0 0 2px rgba(255,255,255,0.3)); }
 } 

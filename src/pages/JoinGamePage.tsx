@@ -80,7 +80,7 @@ const JoinGamePage: React.FC = () => {
         }`}>
 
           {/* Columna derecha: Formulario */}
-          <div className="w-full md:w-1/2">
+          <div className="w-full md:w-1/2 lg:w-2/5">
             <h2 className="text-4xl font-semibold mb-6 text-center md:text-right">
               Unirse a partida
             </h2>
@@ -160,13 +160,13 @@ const JoinGamePage: React.FC = () => {
           </div>
 
           {/* Columna izquierda: Imagen */}
-          <div className={`w-full md:w-1/2 transform transition-all duration-700 ease-out delay-200 ${
+          <div className={`w-full md:w-1/2 lg:w-3/5 transform transition-all duration-700 ease-out delay-200 ${
             showContent ? 'translate-x-0 opacity-100' : 'translate-x-40 opacity-0'
           }`}>
             <img
-              src="/image/join-game-illustration.png"
-              alt="Ilustración unirse a partida"
-              className="w-full h-auto rounded-2xl shadow-2xl object-cover"
+              src="/image/join-game.png"
+              alt="Unirse a partida"
+              className="w-full h-auto md:scale-125 lg:scale-140 md:-my-16 lg:-my-20 object-contain"
             />
           </div>
 

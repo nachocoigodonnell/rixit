@@ -88,7 +88,7 @@ const CreateGamePage: React.FC = () => {
         }`}>
 
           {/* Columna izquierda: Formulario */}
-          <div className="w-full md:w-1/2">
+          <div className="w-full md:w-1/2 lg:w-2/5">
             <h2 className="text-4xl font-semibold mb-6 text-center md:text-left">
               Crear partida
             </h2>
@@ -175,13 +175,13 @@ const CreateGamePage: React.FC = () => {
           </div>
 
           {/* Columna derecha: Imagen */}
-          <div className={`w-full md:w-1/2 transform transition-all duration-700 ease-out delay-200 ${
+          <div className={`w-full md:w-1/2 lg:w-3/5 transform transition-all duration-700 ease-out delay-200 ${
             showContent ? 'translate-x-0 opacity-100' : '-translate-x-40 opacity-0'
           }`}>
             <img
-              src="/image/create-game-illustration.png"
-              alt="Ilustración crear partida"
-              className="w-full h-auto rounded-2xl shadow-2xl object-cover"
+              src="/image/create-game.png"
+              alt="Crear partida"
+              className="w-full h-auto md:scale-125 lg:scale-140 md:-my-16 lg:-my-20 object-contain"
             />
           </div>
 
