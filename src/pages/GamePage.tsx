@@ -1,0 +1,167 @@
+import React, { useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useGameStore } from '../store/useGameStore';
+import GameSteps from '../components/gameSteps/GameSteps';
+import { useToast } from '../hooks/useToast';
+import Button from '../components/Button';
+import { Card, Player } from '../api';
+
+/**
+ * Main game page that shows the current game state and handles game connection
+ */
+const GamePage: React.FC = () => {
+  const { gameCode } = useParams<{ gameCode: string }>();
+  const navigate = useNavigate();
+  const { 
+    game,
+    playerId, 
+    joinGame, 
+    leaveGame, 
+    loadGame, 
+    isLoading, 
+    error,
+    clearError 
+  } = useGameStore();
+  const toast = useToast();
+
+  // Load game data on mount
+  useEffect(() => {
+    if (!gameCode) {
+      navigate('/');
+      return;
+    }
+
+    const storedPlayerId = localStorage.getItem(`playerId_${gameCode}`);
+    
+    // If we have a stored player ID, try to rejoin the game
+    if (storedPlayerId) {
+      loadGame(gameCode, storedPlayerId).catch((err: Error) => {
+        // If loading fails, clear the player ID and show an error
+        localStorage.removeItem(`playerId_${gameCode}`);
+        toast.showError('Failed to reconnect to game. Please join again.');
+      });
+    } else {
+      // If no stored player ID, redirect to join page
+      navigate(`/join/${gameCode}`);
+    }
+
+    // Clean up by leaving game when component unmounts
+    return () => {
+      if (gameCode && playerId) {
+        leaveGame(gameCode, playerId);
+      }
+    };
+  }, [gameCode, navigate]);
+
+  // Handle leave game
+  const handleLeaveGame = async () => {
+    if (!gameCode || !playerId) return;
+    
+    try {
+      await leaveGame(gameCode, playerId);
+      localStorage.removeItem(`playerId_${gameCode}`);
+      navigate('/');
+      toast.showSuccess('Left the game successfully');
+    } catch (err) {
+      toast.showError('Failed to leave the game');
+    }
+  };
+
+  // Show loading state
+  if (isLoading && !game) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <div className="animate-spin h-12 w-12 border-4 border-primary border-t-transparent rounded-full mb-4"></div>
+        <p className="text-lg">Loading game...</p>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error && !game) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <div className="bg-red-500/20 text-red-100 p-4 rounded-lg mb-6 max-w-md w-full text-center">
+          <p className="text-lg font-medium mb-2">Error</p>
+          <p>{error}</p>
+        </div>
+        <Button
+          onClick={() => {
+            clearError();
+            navigate('/');
+          }}
+          className="bg-primary hover:bg-primary/80 text-white"
+        >
+          Back to Home
+        </Button>
+      </div>
+    );
+  }
+
+  // No game loaded
+  if (!game) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <p className="text-lg mb-4">Game not found</p>
+        <Button
+          onClick={() => navigate('/')}
+          className="bg-primary hover:bg-primary/80 text-white"
+        >
+          Back to Home
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      {/* Game header */}
+      <header className="bg-gray-800 py-3 px-4 shadow-md">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div>
+            <h1 className="text-xl font-bold">Rixit</h1>
+            <p className="text-sm text-gray-400">Game Code: {game.code}</p>
+          </div>
+          <Button
+            onClick={handleLeaveGame}
+            className="bg-gray-700 hover:bg-gray-600 text-white text-sm"
+          >
+            Leave Game
+          </Button>
+        </div>
+      </header>
+      
+      {/* Main game content */}
+      <main className="flex-1 overflow-auto">
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <GameSteps />
+        </div>
+      </main>
+      
+      {/* Player hand */}
+      {game && game.stage !== 'waiting' && (
+        <div className="bg-gray-900 p-4 border-t border-gray-800">
+          <div className="max-w-7xl mx-auto">
+            <h3 className="text-sm font-medium text-gray-400 mb-3">Your Cards:</h3>
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              {game.players.find((p: Player) => p.id === playerId)?.hand.map((card: Card) => (
+                <div 
+                  key={card.id} 
+                  className="flex-shrink-0 w-24 h-36 rounded-md overflow-hidden border border-gray-700"
+                >
+                  <img 
+                    src={`/cards/${card.id}.jpg`} 
+                    alt="Card" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default GamePage; 
