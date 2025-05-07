@@ -47,7 +47,7 @@ const WelcomePage: React.FC = () => {
           </p>
 
             <br/>
-            <CardStack />
+            <CardStack entering={!isTransitioning && showContent} transitioning={isTransitioning} />
             <br/>
 
           <div className="flex flex-col sm:flex-row gap-4 w-full max-w-sm mx-auto mt-8 justify-center items-center">
@@ -65,7 +65,7 @@ const WelcomePage: React.FC = () => {
             </Button>
           </div>
           
-          <p className="mt-8 text-sm text-gray-500">
+          <p className="mt-8 text-sm text-white-500">
             Inspira tu imaginación y cuenta historias con tus amigos.
           </p>
         </div>
