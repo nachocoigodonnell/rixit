@@ -1,34 +1,43 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { joinGame } from '../api';
+import { useNavigate, useParams } from 'react-router-dom';
 import Button from '../components/Button';
 import { useToast } from '../hooks/useToast';
+import { useGameStore } from '../store/useGameStore';
 
 interface FormState {
   gameCode: string;
   playerName: string;
 }
 
+interface FormErrors {
+  gameCode?: string;
+  playerName?: string;
+}
+
 const initialState: FormState = { gameCode: '', playerName: '' };
 
 /**
- * Página para unirse a una partida existente.
+ * Page for joining an existing game.
  */
 const JoinGamePage: React.FC = () => {
-  const [form, setForm] = useState<FormState>(initialState);
-  const [errors, setErrors] = useState<Partial<FormState>>({});
-  const [loading, setLoading] = useState(false);
+  const params = useParams<{ gameCode?: string }>();
+  const [form, setForm] = useState<FormState>({
+    gameCode: params.gameCode || '',
+    playerName: ''
+  });
+  const [errors, setErrors] = useState<FormErrors>({});
   const navigate = useNavigate();
   const toast = useToast();
+  const { joinGame, isLoading } = useGameStore();
 
   const validate = (): boolean => {
-    const newErrors: Partial<FormState> = {};
+    const newErrors: FormErrors = {};
 
-    if (!/^[a-zA-Z0-9]{4,6}$/.test(form.gameCode)) {
-      newErrors.gameCode = 'Código de partida inválido (4–6 caracteres alfanuméricos)';
+    if (!/^[A-Za-z0-9]{4,6}$/.test(form.gameCode)) {
+      newErrors.gameCode = 'El código debe tener 4-6 caracteres alfanuméricos';
     }
     if (!/^.{3,15}$/.test(form.playerName)) {
-      newErrors.playerName = 'Nombre debe tener entre 3 y 15 caracteres';
+      newErrors.playerName = 'El nombre debe tener entre 3 y 15 caracteres';
     }
 
     setErrors(newErrors);
@@ -43,36 +52,25 @@ const JoinGamePage: React.FC = () => {
     e.preventDefault();
     if (!validate()) return;
 
-    setLoading(true);
     try {
-      const { accessToken, playerId } = await joinGame(form.gameCode.toUpperCase(), form.playerName);
-      sessionStorage.setItem('accessToken', accessToken);
-      sessionStorage.setItem('playerId', playerId);
-      toast.showSuccess('¡Te uniste a la partida!');
-      navigate(`/partida/${form.gameCode.toUpperCase()}`);
-    } catch (err: unknown) {
-      // @ts-expect-error status vienen del mock
-      const status = err?.status;
-      if (status === 404) {
-        toast.showError('Partida no encontrada');
-      } else if (status === 409) {
-        toast.showError('Nombre de jugador no disponible');
-      } else {
-        toast.showError('Ha ocurrido un error inesperado');
-      }
-    } finally {
-      setLoading(false);
+      await joinGame(form.gameCode.toUpperCase(), form.playerName);
+      toast.showSuccess('¡Te has unido al juego!');
+      
+      // Redireccionar al juego
+      navigate(`/game/${form.gameCode.toUpperCase()}`);
+    } catch (error) {
+      // Error already handled by the store
     }
   };
 
   return (
     <div className="max-w-md mx-auto py-12 px-4">
-      <h2 className="text-3xl font-semibold text-center mb-8">Unirse a partida</h2>
+      <h2 className="text-3xl font-semibold text-center mb-8">Unirse al Juego</h2>
       <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-        {/* Código de partida */}
+        {/* Game code */}
         <div className="flex flex-col">
           <label htmlFor="gameCode" className="mb-1 font-medium">
-            Código de partida
+            Código del Juego
           </label>
           <input
             id="gameCode"
@@ -81,7 +79,7 @@ const JoinGamePage: React.FC = () => {
             value={form.gameCode}
             onChange={handleChange}
             aria-invalid={Boolean(errors.gameCode)}
-            className="px-3 py-2 rounded border border-gray-700 bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary"
+            className="px-3 py-2 rounded border border-gray-700 bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary uppercase"
           />
           {errors.gameCode && (
             <span role="alert" className="text-red-500 text-sm mt-1">
@@ -90,10 +88,10 @@ const JoinGamePage: React.FC = () => {
           )}
         </div>
 
-        {/* Nombre de jugador */}
+        {/* Player name */}
         <div className="flex flex-col">
           <label htmlFor="playerName" className="mb-1 font-medium">
-            Nombre de jugador
+            Nombre de Jugador
           </label>
           <input
             id="playerName"
@@ -111,15 +109,15 @@ const JoinGamePage: React.FC = () => {
           )}
         </div>
 
-        {/* Botón unirme */}
+        {/* Button */}
         <div className="flex justify-center pt-2">
           <Button
             type="submit"
-            disabled={loading}
+            disabled={isLoading}
             className="bg-secondary hover:bg-secondary/80 text-white w-full sm:w-auto flex items-center justify-center gap-2"
           >
-            {loading && <span className="animate-spin h-4 w-4 border-2 border-t-transparent border-white rounded-full" />}
-            Unirme
+            {isLoading && <span className="animate-spin h-4 w-4 border-2 border-t-transparent border-white rounded-full" />}
+            Unirse al Juego
           </Button>
         </div>
       </form>
