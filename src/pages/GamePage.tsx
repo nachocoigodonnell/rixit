@@ -20,7 +20,8 @@ const GamePage: React.FC = () => {
     loadGame, 
     isLoading, 
     error,
-    clearError 
+    clearError,
+    resetGame
   } = useGameStore();
   const toast = useToast();
 
@@ -31,14 +32,17 @@ const GamePage: React.FC = () => {
       return;
     }
 
-    const storedPlayerId = localStorage.getItem(`playerId_${gameCode}`);
+    const storedPlayerId = sessionStorage.getItem('playerId');
+    const storedGameCode = sessionStorage.getItem('gameCode');
     
     // If we have a stored player ID, try to rejoin the game
-    if (storedPlayerId) {
+    if (storedPlayerId && storedGameCode === gameCode) {
       loadGame(gameCode, storedPlayerId).catch((err: Error) => {
         // If loading fails, clear the player ID and show an error
-        localStorage.removeItem(`playerId_${gameCode}`);
-        toast.showError('Failed to reconnect to game. Please join again.');
+        sessionStorage.removeItem('playerId');
+        sessionStorage.removeItem('gameCode');
+        toast.showError('Error al reconectar con el juego. Por favor, únete de nuevo.');
+        navigate(`/join/${gameCode}`);
       });
     } else {
       // If no stored player ID, redirect to join page
@@ -48,7 +52,8 @@ const GamePage: React.FC = () => {
     // Clean up by leaving game when component unmounts
     return () => {
       if (gameCode && playerId) {
-        leaveGame(gameCode, playerId);
+        // No abandonamos el juego automáticamente al salir de la página
+        // para permitir reconexiones fáciles
       }
     };
   }, [gameCode, navigate]);
@@ -59,11 +64,19 @@ const GamePage: React.FC = () => {
     
     try {
       await leaveGame(gameCode, playerId);
-      localStorage.removeItem(`playerId_${gameCode}`);
-      navigate('/');
-      toast.showSuccess('Left the game successfully');
+      sessionStorage.removeItem('playerId');
+      sessionStorage.removeItem('gameCode');
+      sessionStorage.removeItem('accessToken');
+      // Pequeña pausa para asegurar que el estado se limpia completamente
+      setTimeout(() => {
+        resetGame(); // Aseguramos que el estado se limpia completamente
+        navigate('/');
+        toast.showSuccess('Has abandonado el juego');
+      }, 100);
     } catch (err) {
-      toast.showError('Failed to leave the game');
+      resetGame(); // También limpiamos el estado en caso de error
+      toast.showError('Error al abandonar el juego');
+      navigate('/');
     }
   };
 
@@ -72,7 +85,7 @@ const GamePage: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4">
         <div className="animate-spin h-12 w-12 border-4 border-primary border-t-transparent rounded-full mb-4"></div>
-        <p className="text-lg">Loading game...</p>
+        <p className="text-lg">Cargando juego...</p>
       </div>
     );
   }
@@ -92,7 +105,7 @@ const GamePage: React.FC = () => {
           }}
           className="bg-primary hover:bg-primary/80 text-white"
         >
-          Back to Home
+          Volver a Inicio
         </Button>
       </div>
     );
@@ -102,12 +115,12 @@ const GamePage: React.FC = () => {
   if (!game) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4">
-        <p className="text-lg mb-4">Game not found</p>
+        <p className="text-lg mb-4">Juego no encontrado</p>
         <Button
           onClick={() => navigate('/')}
           className="bg-primary hover:bg-primary/80 text-white"
         >
-          Back to Home
+          Volver a Inicio
         </Button>
       </div>
     );
@@ -120,13 +133,13 @@ const GamePage: React.FC = () => {
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div>
             <h1 className="text-xl font-bold">Rixit</h1>
-            <p className="text-sm text-gray-400">Game Code: {game.code}</p>
+            <p className="text-sm text-gray-400">Código: {game.code}</p>
           </div>
           <Button
             onClick={handleLeaveGame}
             className="bg-gray-700 hover:bg-gray-600 text-white text-sm"
           >
-            Leave Game
+            Abandonar Juego
           </Button>
         </div>
       </header>
@@ -139,10 +152,10 @@ const GamePage: React.FC = () => {
       </main>
       
       {/* Player hand */}
-      {game && game.stage !== 'waiting' && (
+      {game && game.stage !== 'lobby' && (
         <div className="bg-gray-900 p-4 border-t border-gray-800">
           <div className="max-w-7xl mx-auto">
-            <h3 className="text-sm font-medium text-gray-400 mb-3">Your Cards:</h3>
+            <h3 className="text-sm font-medium text-gray-400 mb-3">Tus cartas:</h3>
             <div className="flex gap-3 overflow-x-auto pb-2">
               {game.players.find((p: Player) => p.id === playerId)?.hand.map((card: Card) => (
                 <div 

@@ -12,7 +12,9 @@ import {
   submitClue,
   submitCard,
   voteCard,
-  revealRound
+  revealRound,
+  getGame,
+  leaveGame
 } from '../api';
 
 interface GameState {
@@ -37,6 +39,8 @@ interface GameState {
   submitCard: (gameCode: string, cardId: string) => Promise<void>;
   voteCard: (gameCode: string, cardId: string) => Promise<void>;
   revealRound: (gameCode: string) => Promise<void>;
+  loadGame: (gameCode: string, playerId: string) => Promise<void>;
+  leaveGame: (gameCode: string, playerId: string) => Promise<void>;
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -55,7 +59,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     game: null,
     playerId: null,
     accessToken: null,
-    error: null 
+    error: null,
+    isLoading: false
   }),
 
   // API Actions
@@ -69,13 +74,16 @@ export const useGameStore = create<GameState>((set, get) => ({
       sessionStorage.setItem('playerId', playerId);
       sessionStorage.setItem('gameCode', gameCode);
 
+      // Fetch initial game state so LobbyPage puede mostrar datos
+      const game = await getGame(gameCode);
+
       set({ 
+        game,
         accessToken,
         playerId,
         isLoading: false
       });
 
-      // Return so component can navigate
       return;
     } catch (error) {
       console.error('Error creating game:', error);
@@ -197,6 +205,40 @@ export const useGameStore = create<GameState>((set, get) => ({
       console.error('Error revealing round:', error);
       set({ 
         error: error instanceof Error ? error.message : 'Failed to reveal round',
+        isLoading: false 
+      });
+    }
+  },
+
+  loadGame: async (gameCode, playerId) => {
+    set({ isLoading: true, error: null });
+    try {
+      const game = await getGame(gameCode, playerId);
+      set({ game, isLoading: false });
+    } catch (error) {
+      console.error('Error loading game:', error);
+      set({ 
+        error: error instanceof Error ? error.message : 'Failed to load game',
+        isLoading: false 
+      });
+    }
+  },
+
+  leaveGame: async (gameCode, playerId) => {
+    set({ isLoading: true, error: null });
+    try {
+      await leaveGame(gameCode, playerId);
+      set({ 
+        game: null,
+        playerId: null,
+        accessToken: null,
+        error: null,
+        isLoading: false
+      });
+    } catch (error) {
+      console.error('Error leaving game:', error);
+      set({ 
+        error: error instanceof Error ? error.message : 'Failed to leave game',
         isLoading: false 
       });
     }

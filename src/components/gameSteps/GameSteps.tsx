@@ -21,7 +21,7 @@ const GameSteps: React.FC = () => {
   }
 
   // Show waiting room if the game has not started
-  if (game.stage === 'waiting') {
+  if (game.stage === 'lobby') {
     return <WaitingRoom />;
   }
 

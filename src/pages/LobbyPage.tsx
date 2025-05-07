@@ -12,7 +12,7 @@ const LobbyPage: React.FC = () => {
   const { gameCode } = useParams<{ gameCode: string }>();
   const navigate = useNavigate();
   const toast = useToast();
-  const { game, error, isLoading, startRound, playerId } = useGameStore();
+  const { game, error, isLoading, startRound, playerId, resetGame } = useGameStore();
   
   useEffect(() => {
     // Redirect to game page if the game stage is not lobby
@@ -34,12 +34,20 @@ const LobbyPage: React.FC = () => {
             <div className="text-center p-8">
               <h2 className="text-2xl font-bold mb-4">Juego no encontrado</h2>
               <p className="mb-6">{error || "Código de juego inválido o sesión expirada"}</p>
-              <Button 
-                onClick={() => navigate('/join')}
-                className="bg-secondary hover:bg-secondary/80 text-white"
-              >
-                Ir a Unirse
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button 
+                  onClick={() => navigate('/join')}
+                  className="bg-secondary hover:bg-secondary/80 text-white"
+                >
+                  Ir a Unirse
+                </Button>
+                <Button 
+                  onClick={() => navigate('/create')}
+                  className="bg-primary hover:bg-primary/80 text-white"
+                >
+                  Crear Partida
+                </Button>
+              </div>
             </div>
           )}
         </div>
@@ -71,6 +79,7 @@ const LobbyPage: React.FC = () => {
     try {
       await startRound(gameCode);
       toast.showSuccess('¡Juego iniciado!');
+      navigate(`/game/${gameCode}`);
     } catch (error) {
       // Error already handled by the store
     }
@@ -176,6 +185,26 @@ const LobbyPage: React.FC = () => {
       <div className="text-center text-gray-400 text-sm">
         <p>Necesitas al menos 3 jugadores para iniciar el juego.</p>
         <p>¡Comparte el código del juego con tus amigos para que se unan!</p>
+      </div>
+      
+      {/* Botón para volver */}
+      <div className="mt-6 text-center">
+        <button
+          type="button"
+          onClick={() => {
+            sessionStorage.removeItem('playerId');
+            sessionStorage.removeItem('gameCode');
+            sessionStorage.removeItem('accessToken');
+            resetGame();
+            navigate('/');
+          }}
+          className="text-gray-400 hover:text-white flex items-center justify-center mx-auto"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Volver a inicio
+        </button>
       </div>
     </div>
   );

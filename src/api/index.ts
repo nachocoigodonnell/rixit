@@ -18,6 +18,8 @@ import {
   Submission,
   Vote,
   GameStage,
+  getGameMock,
+  leaveGameMock,
 } from './mockServer';
 
 // TODO: Replace mock implementations with real fetch/API calls when backend is ready
@@ -69,6 +71,14 @@ export async function voteCard(gameCode: string, voterId: string, cardId: string
  */
 export async function revealRound(gameCode: string) {
   return revealRoundMock(gameCode);
+}
+
+export async function getGame(gameCode: string, _playerId?: string) {
+  return getGameMock(gameCode);
+}
+
+export async function leaveGame(gameCode: string, playerId: string) {
+  return leaveGameMock(gameCode, playerId);
 }
 
 // Export all types needed by the rest of the application

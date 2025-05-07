@@ -64,7 +64,7 @@ const CreateGamePage: React.FC = () => {
       // Obtener el código de juego del sessionStorage para redireccionar
       const gameCode = sessionStorage.getItem('gameCode');
       if (gameCode) {
-        navigate(`/game/${gameCode}`);
+        navigate(`/lobby/${gameCode}`);
       }
     } catch (error: unknown) {
       // Error already handled by the store
@@ -136,6 +136,19 @@ const CreateGamePage: React.FC = () => {
           </Button>
         </div>
       </form>
+      
+      <div className="mt-6 text-center">
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          className="text-gray-400 hover:text-white flex items-center justify-center mx-auto"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Volver
+        </button>
+      </div>
     </div>
   );
 };

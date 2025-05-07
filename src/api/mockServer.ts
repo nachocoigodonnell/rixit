@@ -123,19 +123,35 @@ export async function createGameMock(
       const cards = await loadCards();
       const shuffledDeck = shuffle(cards);
 
-      // Create initial game state
+      // Create additional dummy players to simulate waiting lobby
+      const dummyPlayers: Player[] = [];
+      for (let i = 0; i < playerCount - 1; i++) {
+        const dummyId = `bot-${Math.random().toString(36).slice(2, 10)}`;
+        dummyPlayers.push({
+          id: dummyId,
+          name: `Jugador ${i + 2}`,
+          hand: [],
+          score: 0,
+          isHost: false,
+        });
+      }
+
+      // add them to players array
+      const playersArray: Player[] = [
+        {
+          id: playerId,
+          name: playerName,
+          hand: [],
+          score: 0,
+          isHost: true,
+        },
+        ...dummyPlayers,
+      ];
+
       const newGame: Game = {
         code: gameCode,
         hostId: playerId,
-        players: [
-          {
-            id: playerId,
-            name: playerName,
-            hand: [],
-            score: 0,
-            isHost: true
-          }
-        ],
+        players: playersArray,
         deck: shuffledDeck,
         discard: [],
         round: 0,
@@ -143,11 +159,14 @@ export async function createGameMock(
         narratorId: null,
         clue: '',
         submissions: [],
-        votes: []
+        votes: [],
       };
 
-      // Deal 6 cards to the host
-      const gameWithCards = dealCards(newGame, playerId, 6);
+      // Deal 6 cards to every player
+      let gameWithCards: Game = newGame;
+      for (const p of playersArray) {
+        gameWithCards = dealCards(gameWithCards, p.id, 6);
+      }
       
       // Store in active games
       activeGames.set(gameCode, gameWithCards);
@@ -647,5 +666,53 @@ function calculateScores(game: Game): Player[] {
       ...player,
       score: player.score + scoreToAdd
     };
+  });
+}
+
+/**
+ * Obtiene el estado actual de un juego
+ */
+export async function getGameMock(gameCode: string): Promise<Game> {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      const game = activeGames.get(gameCode);
+      if (!game) {
+        const err = new Error('Game not found');
+        // @ts-expect-error status
+        err.status = 404;
+        reject(err);
+        return;
+      }
+      resolve(game);
+    }, 300);
+  });
+}
+
+/**
+ * El jugador abandona la partida
+ */
+export async function leaveGameMock(gameCode: string, playerId: string): Promise<Game | null> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const existing = activeGames.get(gameCode);
+      if (!existing) {
+        resolve(null);
+        return;
+      }
+      const newPlayers = existing.players.filter(p => p.id !== playerId);
+      if (newPlayers.length === 0) {
+        // sin jugadores, eliminar juego
+        activeGames.delete(gameCode);
+        resolve(null);
+        return;
+      }
+      const updated: Game = {
+        ...existing,
+        players: newPlayers,
+        hostId: newPlayers[0].id,
+      };
+      activeGames.set(gameCode, updated);
+      resolve(updated);
+    }, 300);
   });
 } 
