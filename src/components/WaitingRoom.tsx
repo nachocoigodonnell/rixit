@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGameStore } from '../store/useGameStore';
+import { useSocketConnection } from '../hooks/useSocketConnection';
+import { startRound as socketStartRound, leaveGame as leaveGameSocket } from '../api/socketApi';
 import { Player } from '../api';
 import Button from './Button';
 import { useToast } from '../hooks/useToast';
@@ -11,11 +13,14 @@ import { useToast } from '../hooks/useToast';
  */
 const WaitingRoom: React.FC = () => {
   const { gameCode } = useParams<{ gameCode: string }>();
-  const { game, playerId, startRound, isLoading, error, resetGame } = useGameStore();
+  const { game, playerId, startRound, leaveGame, isLoading, error, resetGame } = useGameStore();
   const toast = useToast();
   const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
   const [showContent, setShowContent] = useState(false);
+
+  // Conectar websocket
+  const { isConnected } = useSocketConnection(gameCode);
 
   // Efecto de entrada
   useEffect(() => {
@@ -25,7 +30,12 @@ const WaitingRoom: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  if (!game) {
+  // Efecto para mostrar estado de conexión en consola (debug)
+  useEffect(() => {
+    console.log('Estado de conexión websocket:', isConnected);
+  }, [isConnected]);
+
+  if (!game || !Array.isArray(game.players)) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
@@ -33,7 +43,7 @@ const WaitingRoom: React.FC = () => {
     );
   }
 
-  const currentPlayer = game.players.find((p: Player) => p.id === playerId);
+  const currentPlayer = game.players?.find((p: Player) => p.id === playerId);
   const isHost = currentPlayer?.isHost || false;
   
   // Determine if we have enough players to start (3 or more)
@@ -44,7 +54,6 @@ const WaitingRoom: React.FC = () => {
     navigator.clipboard.writeText(url)
       .then(() => {
         setCopied(true);
-        toast.showSuccess('¡Enlace de invitación copiado al portapapeles!');
         setTimeout(() => setCopied(false), 2000);
       })
       .catch(err => {
@@ -53,7 +62,7 @@ const WaitingRoom: React.FC = () => {
       });
   };
 
-  const handleStartGame = async () => {
+  const handleStartGame = () => {
     if (!gameCode) {
       toast.showError('Código de juego no encontrado');
       return;
@@ -65,14 +74,44 @@ const WaitingRoom: React.FC = () => {
     }
     
     try {
-      await startRound(gameCode);
-      toast.showSuccess('¡Juego iniciado!');
-      navigate(`/game/${gameCode}`);
+      // Enviamos la acción via websocket en lugar de HTTP
+      socketStartRound(gameCode);
+      toast.showSuccess('Iniciando juego...');
+      
+      // La navegación ocurrirá cuando recibamos la actualización por WS
+      // y el estado cambie de "waiting" a "in_progress"
     } catch (err) {
-      // Error is shown by store, just add a toast
       toast.showError('Error al iniciar el juego');
     }
   };
+
+  // Efecto para navegar cuando el estado del juego cambie a "in_progress"
+  useEffect(() => {
+    if (game && game.stage !== 'lobby' && gameCode) {
+      navigate(`/game/${gameCode}`);
+    }
+  }, [game?.stage, gameCode, navigate]);
+
+  // Handler para abandonar juego
+  const handleLeaveGame = async () => {
+    if (!gameCode || !playerId) return;
+    try {
+      await leaveGame(gameCode, playerId);
+      // Eliminamos credenciales
+      sessionStorage.removeItem('playerId');
+      sessionStorage.removeItem('gameCode');
+      sessionStorage.removeItem('accessToken');
+      resetGame();
+      navigate('/');
+      toast.showSuccess('Has salido de la partida');
+    } catch (err) {
+      resetGame();
+      navigate('/');
+    }
+  };
+
+  // Nota: Se han eliminado los envíos automáticos de leave_game
+  // para evitar que se borren juegos/jugadores accidentalmente
 
   return (
     <div className="py-8 px-4 min-h-screen flex items-center justify-center overflow-hidden">
@@ -222,23 +261,17 @@ const WaitingRoom: React.FC = () => {
           </div>
         </div>
         
-        {/* Botón para volver */}
+        {/* Botón para salir de la partida */}
         <div className={`mt-6 text-center transition-all duration-700 ease-out delay-500 transform ${showContent ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
           <button
             type="button"
-            onClick={() => {
-              sessionStorage.removeItem('playerId');
-              sessionStorage.removeItem('gameCode');
-              sessionStorage.removeItem('accessToken');
-              resetGame();
-              navigate('/');
-            }}
-            className="text-gray-400 hover:text-white flex items-center justify-center mx-auto transition-colors duration-300"
+            onClick={handleLeaveGame}
+            className="text-red-400 hover:text-red-200 flex items-center justify-center mx-auto transition-colors duration-300"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            Volver a inicio
+            Salir de la partida
           </button>
         </div>
         

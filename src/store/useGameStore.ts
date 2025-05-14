@@ -14,8 +14,8 @@ import {
   voteCard,
   revealRound,
   getGame,
-  leaveGame
 } from '../api';
+import { leaveGame as leaveGameSocket } from '../api/socketApi';
 
 interface GameState {
   // State
@@ -33,7 +33,7 @@ interface GameState {
 
   // API Actions
   createGame: (playerName: string, playerCount: number) => Promise<void>;
-  joinGame: (gameCode: string, playerName: string) => Promise<void>;
+  joinGame: (gameCode: string, playerName: string) => Promise<boolean>;
   startRound: (gameCode: string) => Promise<void>;
   submitClue: (gameCode: string, clue: string, cardId: string) => Promise<void>;
   submitCard: (gameCode: string, cardId: string) => Promise<void>;
@@ -95,6 +95,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   joinGame: async (gameCode, playerName) => {
+    console.log('Joining game:', gameCode, playerName);
     set({ isLoading: true, error: null });
     try {
       const { game, accessToken, playerId } = await joinGame(gameCode, playerName);
@@ -103,6 +104,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       sessionStorage.setItem('accessToken', accessToken);
       sessionStorage.setItem('playerId', playerId);
       sessionStorage.setItem('gameCode', gameCode);
+      sessionStorage.setItem('playerName', playerName);
 
       set({ 
         game,
@@ -111,14 +113,14 @@ export const useGameStore = create<GameState>((set, get) => ({
         isLoading: false 
       });
 
-      // Return so component can navigate
-      return;
+      return true;
     } catch (error) {
       console.error('Error joining game:', error);
       set({ 
         error: error instanceof Error ? error.message : 'Failed to join game',
         isLoading: false 
       });
+      throw error;
     }
   },
 
@@ -211,10 +213,21 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   loadGame: async (gameCode, playerId) => {
+    console.log('Loading game:', gameCode, playerId);
     set({ isLoading: true, error: null });
     try {
-      const game = await getGame(gameCode, playerId);
-      set({ game, isLoading: false });
+      const game = await getGame(gameCode);
+      
+      // Recuperar token de acceso de la sesión
+      const accessToken = sessionStorage.getItem('accessToken') || null;
+      
+      // Establecer todos los datos necesarios
+      set({
+        game,
+        playerId,
+        accessToken,
+        isLoading: false 
+      });
     } catch (error) {
       console.error('Error loading game:', error);
       set({ 
@@ -227,7 +240,10 @@ export const useGameStore = create<GameState>((set, get) => ({
   leaveGame: async (gameCode, playerId) => {
     set({ isLoading: true, error: null });
     try {
-      await leaveGame(gameCode, playerId);
+      // Usamos el socket para abandonar la partida
+      leaveGameSocket(gameCode, playerId);
+
+      // Limpiar estado local inmediatamente (no esperamos respuesta HTTP)
       set({ 
         game: null,
         playerId: null,

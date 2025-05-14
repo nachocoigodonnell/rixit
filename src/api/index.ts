@@ -5,37 +5,64 @@
  */
 
 import { 
-  createGameMock, 
-  joinGameMock, 
-  startRoundMock, 
+  startRoundMock, // TODO reemplazar cuando exista endpoint
   submitClueMock,
-  submitCardMock, 
-  voteCardMock, 
+  submitCardMock,
+  voteCardMock,
   revealRoundMock,
-  Game, 
   Card,
   Player,
   Submission,
   Vote,
   GameStage,
-  getGameMock,
   leaveGameMock,
+  createGameMock,
+  joinGameMock,
+  getGameMock,
 } from './mockServer';
 
-// TODO: Replace mock implementations with real fetch/API calls when backend is ready
+import { config } from '../config';
+
 
 /**
  * Creates a new game with the specified player name and player count
  */
 export async function createGame(playerName: string, playerCount: number) {
-  return createGameMock(playerName, playerCount);
+  const response = await fetch(`${config.api.baseUrl}${config.api.endpoints.createGame}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ playerName, playerCount }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to create game');
+  }
+
+  return response.json();
+  
 }
 
 /**
  * Joins an existing game with the specified game code and player name
  */
 export async function joinGame(gameCode: string, playerName: string) {
-  return joinGameMock(gameCode, playerName);
+  const url = `${config.api.baseUrl}${config.api.endpoints.joinGame(gameCode)}`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ playerName }),
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to join game');
+  }
+
+  return response.json();
 }
 
 /**
@@ -73,8 +100,14 @@ export async function revealRound(gameCode: string) {
   return revealRoundMock(gameCode);
 }
 
-export async function getGame(gameCode: string, _playerId?: string) {
-  return getGameMock(gameCode);
+export async function getGame(gameCode: string) {
+  const url = `${config.api.baseUrl}${config.api.endpoints.gameByCode(gameCode)}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to load game');
+  }
+  return response.json();
 }
 
 export async function leaveGame(gameCode: string, playerId: string) {
@@ -83,10 +116,18 @@ export async function leaveGame(gameCode: string, playerId: string) {
 
 // Export all types needed by the rest of the application
 export type { 
-  Game, 
   Card,
   Player,
   Submission,
   Vote,
   GameStage,
-}; 
+};
+
+// Definición de Game para la integración con WebSockets
+export interface Game {
+  id?: string;
+  code: string;
+  stage: GameStage;
+  players: Player[];
+  rounds?: any[];
+} 

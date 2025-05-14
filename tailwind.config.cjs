@@ -8,6 +8,9 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        'fredoka-one': ['"Fredoka One"', 'cursive'],
+      },
       colors: {
         primary: '#646cff',
         secondary: '#ff646c',

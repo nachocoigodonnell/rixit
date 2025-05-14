@@ -39,10 +39,14 @@ const WelcomePage: React.FC = () => {
       <FloatingEffects transitioning={isTransitioning} />
       <section className="relative z-10 text-center min-h-[80vh] flex flex-col items-center justify-center py-10 px-4">
         <div className={`transform transition-all duration-1000 ${showContent ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
-          <h2 className="text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+          <h2 className="text-5xl font-fredoka-one pb-2 mb-4 relative">
+            <span className="absolute -inset-1 blur-xl bg-gradient-to-r from-primary/50 to-secondary/50 opacity-30 rounded-lg"></span>
+            <span className="relative bg-gradient-to-r from-white to-gray-100 bg-clip-text text-transparent drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
             ¡Bienvenid@ a Rixit!
+            </span>
+            <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-gradient-to-r from-primary to-secondary rounded-full"></span>
           </h2>
-          <p className="text-gray-400 max-w-md mx-auto mb-8">
+          <p className="text-white-400 max-w-md mx-auto mb-8">
             Crea historias y adivina las cartas de tus amig@s en este juego de imaginación.
           </p>
 

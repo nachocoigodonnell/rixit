@@ -66,7 +66,7 @@ const CardStack: React.FC<CardStackProps> = ({ entering = false, transitioning =
                   <img
                     src="/image/rixit-logo.png"
                     alt="Rixit Logo"
-                    className="w-28 h-auto drop-shadow-lg animate-[gentle-float_5s_ease-in-out_infinite]"
+                    className="w-28 h-auto drop-shadow-lg animate-[gentle-float_3s_ease-in-out_infinite]"
                   />
                 </div>
               )}

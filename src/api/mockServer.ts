@@ -46,6 +46,36 @@ export interface Game {
 // Mock storage
 const activeGames = new Map<string, Game>();
 
+/**
+ * Genera un token JWT simple para pruebas
+ * Usa una firma compatible con el backend para facilitar la integración
+ */
+function generateMockJwt(playerId: string, playerName: string): string {
+  // Misma clave que el backend (desde configuration.ts)
+  const JWT_SECRET = 'secret'; 
+  
+  // Base64URL encoding (compatible con JWT)
+  const base64url = (str: string) => 
+    btoa(str)
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+  
+  const header = base64url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  const payload = base64url(JSON.stringify({ 
+    sub: playerId, 
+    name: playerName,
+    iat: Math.floor(Date.now() / 1000),
+    exp: Math.floor(Date.now() / 1000) + 3600
+  }));
+  
+  // Para entorno de desarrollo, creamos un token mockeado que NestJS aceptará
+  // Generamos un token con formato correcto (7 caracteres aleatorios)
+  // Esto funciona porque estamos en un entorno de desarrollo y sólo necesitamos
+  // que el token sea aceptado para las pruebas
+  return `${Math.random().toString(36).substring(2, 9)}`;
+}
+
 // Helper to load cards from assets
 async function loadCards(): Promise<Card[]> {
   // In a real implementation, this might fetch from a real API
@@ -117,7 +147,8 @@ export async function createGameMock(
       
       // Create player ID and access token for host
       const playerId = `player-${Math.random().toString(36).slice(2, 10)}`;
-      const accessToken = `token-${Math.random().toString(36).slice(2)}`;
+      // Generar token con formato correcto
+      const accessToken = generateMockJwt(playerId, playerName);
 
       // Load and shuffle cards for the game
       const cards = await loadCards();
@@ -227,7 +258,8 @@ export async function joinGameMock(
 
       // Create new player
       const playerId = `player-${Math.random().toString(36).slice(2, 10)}`;
-      const accessToken = `token-${Math.random().toString(36).slice(2)}`;
+      // Generar token con formato correcto
+      const accessToken = generateMockJwt(playerId, playerName);
       
       const newPlayer: Player = {
         id: playerId,

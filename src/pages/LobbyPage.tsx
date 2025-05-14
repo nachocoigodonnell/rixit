@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Button from '../components/Button';
-import { useToast } from '../hooks/useToast';
 import { useGameStore } from '../store/useGameStore';
 import WaitingRoom from '../components/WaitingRoom';
 
@@ -11,15 +10,20 @@ import WaitingRoom from '../components/WaitingRoom';
 const LobbyPage: React.FC = () => {
   const { gameCode } = useParams<{ gameCode: string }>();
   const navigate = useNavigate();
-  const { game, error, isLoading, loadGame } = useGameStore();
+  const { game, playerId, error, isLoading, loadGame } = useGameStore();
   
+  // Cargar juego sólo si el store sigue vacío tras el primer tick
   useEffect(() => {
-    // Cargar el juego si tenemos un código
-    if (gameCode) {
-      const playerId = sessionStorage.getItem('playerId') || '';
-      loadGame(gameCode, playerId);
-    }
-  }, [gameCode, loadGame]);
+    const timer = setTimeout(() => {
+      if (!game && gameCode) {
+        const storedId = sessionStorage.getItem('playerId');
+        if (storedId) {
+          loadGame(gameCode, storedId);
+        }
+      }
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [game, gameCode, loadGame]);
   
   useEffect(() => {
     // Redirect to game page if the game stage is not lobby

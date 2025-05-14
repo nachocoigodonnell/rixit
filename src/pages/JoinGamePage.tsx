@@ -62,11 +62,11 @@ const JoinGamePage: React.FC = () => {
     if (!validate()) return;
 
     try {
-      await joinGame(form.gameCode.toUpperCase(), form.playerName);
-      toast.showSuccess('¡Te has unido al juego!');
-      
-      // Redireccionar al juego
-      navigate(`/lobby/${form.gameCode.toUpperCase()}`);
+      const success = await joinGame(form.gameCode.toUpperCase(), form.playerName);
+      if (success) {
+        toast.showSuccess('¡Te has unido al juego!');
+        navigate(`/lobby/${form.gameCode.toUpperCase()}`);
+      }
     } catch (error) {
       // Error already handled by the store
     }

@@ -28,6 +28,13 @@ const GamePage: React.FC = () => {
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const [cardRotations, setCardRotations] = useState<Record<string, { x: number, y: number }>>({});
+  const [activePage, setActivePage] = useState(0);
+  const carouselRef = useRef<HTMLDivElement>(null);
+
+  // Estado adicional para drag-to-scroll
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
 
   // Efecto de entrada
   useEffect(() => {
@@ -69,6 +76,95 @@ const GamePage: React.FC = () => {
       }
     };
   }, [gameCode, navigate]);
+
+  // Monitorear el scroll horizontal del carrusel
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!carouselRef.current || !game?.players) return;
+      
+      const currentPlayerLocal = game.players.find((p: Player) => p.id === playerId);
+      if (!currentPlayerLocal) return;
+      
+      // Si no hay hand, no hay necesidad de paginación
+      if (currentPlayerLocal.hand.length <= 3) {
+        setActivePage(0);
+        return;
+      }
+      
+      const scrollWidth = carouselRef.current.scrollWidth;
+      const scrollLeft = carouselRef.current.scrollLeft;
+      const clientWidth = carouselRef.current.clientWidth;
+      
+      // Calcular páginas basadas en el ancho visible
+      const totalPages = Math.ceil(scrollWidth / clientWidth) || 1; // Prevenir división por cero
+      const scrollPercentage = (scrollWidth - clientWidth) > 0 ? 
+        scrollLeft / (scrollWidth - clientWidth) : 0;
+      const activePage = Math.min(
+        Math.floor(scrollPercentage * totalPages),
+        totalPages - 1
+      );
+      
+      setActivePage(activePage);
+    };
+    
+    const carouselElement = carouselRef.current;
+    if (carouselElement) {
+      carouselElement.addEventListener('scroll', handleScroll);
+      // Llamar inicialmente para establecer la página actual
+      handleScroll();
+    }
+    
+    return () => {
+      if (carouselElement) {
+        carouselElement.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, [game, playerId]);
+
+  // Función para manejar inicio de arrastre
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!carouselRef.current) return;
+    
+    setIsDragging(true);
+    setStartX(e.pageX - carouselRef.current.offsetLeft);
+    setScrollLeft(carouselRef.current.scrollLeft);
+    // Cambiar el cursor mientras se arrastra
+    document.body.style.cursor = 'grabbing';
+  };
+
+  // Función para manejar movimiento durante arrastre
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDragging || !carouselRef.current) return;
+    
+    // Prevenir selección de texto durante el arrastre
+    e.preventDefault();
+    
+    const x = e.pageX - carouselRef.current.offsetLeft;
+    const walk = (x - startX) * 1.5; // Multiplicador para ajustar velocidad
+    carouselRef.current.scrollLeft = scrollLeft - walk;
+  };
+
+  // Función para finalizar arrastre
+  const handleMouseUp = () => {
+    setIsDragging(false);
+    document.body.style.cursor = 'default';
+  };
+
+  // Función para limpiar eventos al desmontar
+  useEffect(() => {
+    const handleMouseUpGlobal = () => {
+      if (isDragging) {
+        setIsDragging(false);
+        document.body.style.cursor = 'default';
+      }
+    };
+    
+    document.addEventListener('mouseup', handleMouseUpGlobal);
+    return () => {
+      document.removeEventListener('mouseup', handleMouseUpGlobal);
+      document.body.style.cursor = 'default';
+    };
+  }, [isDragging]);
 
   // Handle leave game
   const handleLeaveGame = async () => {
@@ -188,6 +284,17 @@ const GamePage: React.FC = () => {
     );
   }
 
+  if (!game || !game.players?.length) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+
+  const currentPlayerLocal = game.players.find((p: Player) => p.id === playerId);
+  if (!currentPlayerLocal?.hand) return;
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Game header - completamente transparente */}
@@ -203,7 +310,7 @@ const GamePage: React.FC = () => {
               </h1>
               <div className="flex items-center">
                 <span className="text-sm text-gray-400">Código: </span>
-                <span className="text-sm font-mono bg-gray-700/80 px-2 py-0.5 rounded ml-1">{game.code}</span>
+                <span className="text-sm font-mono bg-gray-700/80 px-2 py-0.5 rounded ml-1">{game?.code}</span>
               </div>
             </div>
           </div>
@@ -223,71 +330,92 @@ const GamePage: React.FC = () => {
         </div>
       </main>
       
-      {/* Player hand */}
+      {/* Mano del jugador - versión carrusel mejorada */}
       {game && game.stage !== 'lobby' && (
-        <div className={`bg-gray-900/50 backdrop-blur-sm p-4 border-t border-gray-800/30 z-10 transition-all duration-700 ease-out delay-200 transform ${showContent ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+        <div className={`bg-gray-900/60 backdrop-blur-sm p-4 border-t border-gray-800/30 z-10 transition-all duration-500 ${showContent ? 'opacity-100' : 'opacity-0'}`}>
           <div className="max-w-7xl mx-auto">
-            <h3 className="text-sm font-medium text-gray-400 mb-3">Tus cartas:</h3>
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-sm font-medium text-gray-400">Tu baraja:</h3>
+              <span className="text-xs bg-gray-800/80 px-2 py-1 rounded-full text-primary">
+                {game?.players.find((p: Player) => p.id === playerId)?.hand?.length || 0} cartas
+              </span>
+            </div>
             
-            <div className="perspective-500 flex gap-3 overflow-x-auto pb-2 px-1">
-              {game.players.find((p: Player) => p.id === playerId)?.hand.map((card: Card, index: number) => {
-                const isSelected = selectedCard === card.id;
-                const isHovered = hoveredCard === card.id;
-                const rotation = cardRotations[card.id] || { x: 0, y: 0 };
-                
-                return (
+            {/* Indicadores de paginación dinámicos */}
+            {game?.players.find((p: Player) => p.id === playerId)?.hand?.length > 3 && (
+              <div className="flex justify-center gap-1 mb-2">
+                {Array.from({ length: Math.ceil((game?.players.find((p: Player) => p.id === playerId)?.hand?.length || 0) / 3) }).map((_, i) => (
                   <div 
-                    key={card.id} 
-                    className={`
-                      flex-shrink-0 w-24 h-36 rounded-lg overflow-hidden
-                      shadow-lg transition-all duration-300 cursor-pointer
-                      ${isSelected ? 'ring-2 ring-primary shadow-lg shadow-primary/30 scale-110 z-20' : ''}
-                      ${isHovered ? 'shadow-xl shadow-primary/20 z-10' : 'shadow-lg'}
-                      ${!isSelected && !isHovered ? 'card-floating' : ''}
-                    `}
-                    style={{
-                      transitionDelay: `${100 + index * 50}ms`,
-                      transform: isSelected 
-                        ? 'translateY(-15px) scale(1.05)'
-                        : isHovered 
-                          ? `translateY(-8px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`
-                          : 'translateY(0)',
-                      animationDelay: `${index * 0.15}s`,
-                      transition: isHovered ? 'transform 0.1s ease-out' : 'transform 0.3s ease-out'
-                    }}
-                    onClick={() => handleCardSelect(card.id)}
-                    onMouseEnter={() => setHoveredCard(card.id)}
-                    onMouseMove={(e) => handleCardMove(e, card.id)}
-                    onMouseLeave={() => resetCardRotation(card.id)}
-                  >
-                    {/* Efecto de resplandor alrededor de la carta cuando está seleccionada */}
-                    {isSelected && (
-                      <div className="absolute -inset-1 bg-primary/20 rounded-lg blur-sm animate-pulse z-0"></div>
-                    )}
-                    
-                    {/* Overlay de brillo superior cuando está seleccionada */}
-                    {isSelected && (
-                      <div className="absolute inset-0 bg-primary/10 animate-pulse z-10"></div>
-                    )}
-                    
-                    <img 
-                      src={`/cards/${card.id}.jpg`} 
-                      alt="Card" 
+                    key={i} 
+                    className={`h-1 w-4 rounded-full transition-all duration-300 ${i === activePage ? 'bg-primary w-8' : 'bg-gray-700/80'}`}
+                  />
+                ))}
+              </div>
+            )}
+            
+            {/* Contenedor de carrusel con arrastre para escritorio */}
+            <div 
+              ref={carouselRef} 
+              className={`
+                overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-4
+                ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}
+              `}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              <div className="flex gap-4 px-2 min-w-min pb-2 select-none">
+                {game?.players.find((p: Player) => p.id === playerId)?.hand?.map((card: Card, index: number) => {
+                  const isSelected = selectedCard === card.id;
+                  
+                  return (
+                    <div 
+                      key={card.id} 
                       className={`
-                        w-full h-full object-cover transition-all duration-500 relative z-10
-                        ${isHovered || isSelected ? 'scale-110 brightness-110' : 'scale-100'}
+                        flex-shrink-0 w-36 h-54 sm:w-40 sm:h-60 
+                        rounded-lg overflow-hidden shadow-lg
+                        transition-all duration-300 cursor-pointer snap-center
+                        ${isSelected 
+                          ? 'ring-2 ring-primary scale-105 shadow-xl shadow-primary/20' 
+                          : 'border border-gray-700/50'}
                       `}
-                    />
-                    
-                    {/* Efecto de brillo en las esquinas */}
-                    <div className={`
-                      absolute inset-0 opacity-0 transition-opacity duration-300 z-20
-                      bg-gradient-to-tr from-transparent via-white/0 to-primary/30
-                      ${isHovered ? 'opacity-100' : ''}
-                    `}></div>
-                  </div>
-                );
-              })}
+                      onClick={() => handleCardSelect(card.id)}
+                    >
+                      <div className="relative w-full h-full">
+                        <img 
+                          src={`/cards/${card.id}.jpg`} 
+                          alt={`Carta ${index + 1}`}
+                          className={`
+                            w-full h-full object-cover transition-all
+                            ${isSelected ? 'brightness-110' : ''}
+                          `}
+                          draggable="false"
+                        />
+                        
+                        {/* Efecto sobrepuesto al seleccionar */}
+                        {isSelected && (
+                          <div className="absolute inset-0 bg-primary/10 pointer-events-none"></div>
+                        )}
+                        
+                        {/* Indicador de selección */}
+                        {isSelected && (
+                          <div className="absolute bottom-0 inset-x-0 h-1.5 bg-primary"></div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            
+            {/* Texto de ayuda adaptado para móvil y escritorio */}
+            <div className="text-center text-gray-500 text-xs mt-1">
+              <span className="hidden sm:inline">Arrastra para deslizar</span>
+              <span className="sm:hidden">Desliza para ver más</span>
+              {" • "}
+              <span>Toca para seleccionar</span>
             </div>
           </div>
         </div>
