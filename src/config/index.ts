@@ -11,6 +11,12 @@ export const config = {
       createGame: '/games/create',
       joinGame: (code: string) => `/games/${code}/join`,
       gameByCode: (code: string) => `/games/code/${code}`,
+      startGame: (code: string) => `/games/${code}/start`,
+      submitClue: (code: string) => `/games/${code}/clue`,
+      submitCard: (code: string) => `/games/${code}/submit`,
+      voteCard: (code: string) => `/games/${code}/vote`,
+      revealRound: (code: string) => `/games/${code}/reveal`,
+      leaveGame: (code: string) => `/games/${code}/leave`,
     },
   },
   socket: {

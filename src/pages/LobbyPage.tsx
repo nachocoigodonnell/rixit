@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Button from '../components/Button';
 import { useGameStore } from '../store/useGameStore';
@@ -11,6 +11,8 @@ const LobbyPage: React.FC = () => {
   const { gameCode } = useParams<{ gameCode: string }>();
   const navigate = useNavigate();
   const { game, playerId, error, isLoading, loadGame } = useGameStore();
+  // Estado para controlar el renderizado del WaitingRoom
+  const [shouldRenderWaitingRoom, setShouldRenderWaitingRoom] = useState(true);
   
   // Cargar juego sólo si el store sigue vacío tras el primer tick
   useEffect(() => {
@@ -25,12 +27,19 @@ const LobbyPage: React.FC = () => {
     return () => clearTimeout(timer);
   }, [game, gameCode, loadGame]);
   
+  // Detectar cambios en el estado del juego y redirigir
   useEffect(() => {
-    // Redirect to game page if the game stage is not lobby
     if (game && game.stage !== 'lobby') {
-      navigate(`/game/${gameCode}`);
+      console.log('LobbyPage detectó cambio de estado:', game.stage);
+      // Primero desactivamos el renderizado del WaitingRoom
+      setShouldRenderWaitingRoom(false);
+      // Luego navegamos con un pequeño retraso para evitar conflictos de hook
+      const timer = setTimeout(() => {
+        navigate(`/game/${gameCode}`);
+      }, 50);
+      return () => clearTimeout(timer);
     }
-  }, [game, gameCode, navigate]);
+  }, [game?.stage, gameCode, navigate]);
   
   if (!game) {
     return (
@@ -68,8 +77,8 @@ const LobbyPage: React.FC = () => {
     );
   }
   
-  // Si el juego está en etapa lobby, mostramos la sala de espera
-  return <WaitingRoom />;
+  // Si el juego está en etapa lobby Y debemos renderizar el waiting room
+  return shouldRenderWaitingRoom ? <WaitingRoom /> : null;
 };
 
 export default LobbyPage; 

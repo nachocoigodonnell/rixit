@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGameStore } from '../store/useGameStore';
-import { useSocketConnection } from '../hooks/useSocketConnection';
-import { startRound as socketStartRound, leaveGame as leaveGameSocket } from '../api/socketApi';
 import { Player } from '../api';
 import Button from './Button';
 import { useToast } from '../hooks/useToast';
+import { useSocketConnection } from '../hooks/useSocketConnection';
 
 /**
  * Component that shows the waiting room screen before a game starts.
@@ -35,6 +34,24 @@ const WaitingRoom: React.FC = () => {
     console.log('Estado de conexión websocket:', isConnected);
   }, [isConnected]);
 
+  // Efecto para navegar cuando el estado del juego cambie a "clue" u otro estado diferente de lobby
+  // Usamos useLayoutEffect para que se ejecute ANTES de que el componente se renderice
+  useLayoutEffect(() => {
+    if (game && game.stage !== 'lobby' && gameCode) {
+      console.log('Navegando a la página del juego porque el estado cambió a:', game.stage);
+      navigate(`/game/${gameCode}`);
+      return; // Importante: detener el proceso aquí
+    }
+  }, [game?.stage, gameCode, navigate]);
+
+  // Verificación de datos prioritaria - IMPORTANTE: esta verificación debe ir después de TODOS los hooks
+  if (game && game.stage !== 'lobby' && gameCode) {
+    console.log('Renderizado bloqueado - Juego en estado:', game.stage);
+    // No renderizar contenido durante transición para prevenir errores de hooks
+    return null;
+  }
+
+  // Verificación de datos (original)
   if (!game || !Array.isArray(game.players)) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -73,24 +90,18 @@ const WaitingRoom: React.FC = () => {
       return;
     }
     
-    try {
-      // Enviamos la acción via websocket en lugar de HTTP
-      socketStartRound(gameCode);
-      toast.showSuccess('Iniciando juego...');
-      
-      // La navegación ocurrirá cuando recibamos la actualización por WS
-      // y el estado cambie de "waiting" a "in_progress"
-    } catch (err) {
-      toast.showError('Error al iniciar el juego');
-    }
+    // Iniciamos el juego vía API REST, que a su vez notificará por WebSocket
+    startRound(gameCode)
+      .then(() => {
+        toast.showSuccess('Iniciando juego...');
+      })
+      .catch((err) => {
+        toast.showError('Error al iniciar el juego');
+      });
+    
+    // La navegación ocurrirá cuando recibamos la actualización por WS
+    // y el estado cambie de "lobby" a "in_progress"
   };
-
-  // Efecto para navegar cuando el estado del juego cambie a "in_progress"
-  useEffect(() => {
-    if (game && game.stage !== 'lobby' && gameCode) {
-      navigate(`/game/${gameCode}`);
-    }
-  }, [game?.stage, gameCode, navigate]);
 
   // Handler para abandonar juego
   const handleLeaveGame = async () => {

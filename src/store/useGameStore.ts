@@ -14,8 +14,8 @@ import {
   voteCard,
   revealRound,
   getGame,
+  leaveGame as leaveGameApi,
 } from '../api';
-import { leaveGame as leaveGameSocket } from '../api/socketApi';
 
 interface GameState {
   // State
@@ -218,6 +218,11 @@ export const useGameStore = create<GameState>((set, get) => ({
     try {
       const game = await getGame(gameCode);
       
+      // Debug - Ver la estructura del juego y la mano del jugador actual
+      console.log('Game loaded:', game);
+      const playerWithHand = game.players.find((p: { id: string }) => p.id === playerId);
+      console.log('Current player hand:', playerWithHand?.hand);
+      
       // Recuperar token de acceso de la sesión
       const accessToken = sessionStorage.getItem('accessToken') || null;
       
@@ -240,8 +245,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   leaveGame: async (gameCode, playerId) => {
     set({ isLoading: true, error: null });
     try {
-      // Usamos el socket para abandonar la partida
-      leaveGameSocket(gameCode, playerId);
+      // Usar la API real para abandonar la partida
+      await leaveGameApi(gameCode, playerId);
 
       // Limpiar estado local inmediatamente (no esperamos respuesta HTTP)
       set({ 

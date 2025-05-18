@@ -2,7 +2,7 @@ export interface Player {
   id: string;
   name: string;
   score: number;
-  hand: Card[];
+  hand?: Card[];
 }
 
 export interface Card {
@@ -40,4 +40,5 @@ export interface Game {
   stage: GameStage;
   roundsCompleted: number;
   winningScore: number;
+  narratorId?: string;
 } 

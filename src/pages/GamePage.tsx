@@ -367,12 +367,15 @@ const GamePage: React.FC = () => {
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               <div className="flex gap-4 px-2 min-w-min pb-2 select-none">
-                {game?.players.find((p: Player) => p.id === playerId)?.hand?.map((card: Card, index: number) => {
+                {game?.players.find((p: Player) => p.id === playerId)?.hand?.map((card, index: number) => {
                   const isSelected = selectedCard === card.id;
+                  
+                  // Debug: ver qué propiedades tiene nuestra carta
+                  console.log(`Carta ${index}:`, card);
                   
                   return (
                     <div 
-                      key={card.id} 
+                      key={card?.id || `card-${index}`}
                       className={`
                         flex-shrink-0 w-36 h-54 sm:w-40 sm:h-60 
                         rounded-lg overflow-hidden shadow-lg
@@ -385,7 +388,7 @@ const GamePage: React.FC = () => {
                     >
                       <div className="relative w-full h-full">
                         <img 
-                          src={`/cards/${card.id}.jpg`} 
+                          src={card && card.imageUrl ? card.imageUrl : `/cards/default.jpg`}
                           alt={`Carta ${index + 1}`}
                           className={`
                             w-full h-full object-cover transition-all

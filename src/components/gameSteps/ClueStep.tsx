@@ -19,9 +19,9 @@ const ClueStep: React.FC = () => {
   if (!game || game.stage !== 'clue' || game.narratorId !== playerId) {
     return (
       <div className="text-center py-6">
-        <h3 className="text-xl font-medium mb-4">Waiting for Narrator</h3>
+        <h3 className="text-xl font-medium mb-4">Esperando al narrador</h3>
         <p className="text-gray-400">
-          The narrator is choosing a card and creating a clue...
+          El narrador está eligiendo una carta y pensando en una pista...
         </p>
       </div>
     );
@@ -60,29 +60,29 @@ const ClueStep: React.FC = () => {
 
   return (
     <div className="py-6">
-      <h3 className="text-xl font-medium mb-6 text-center">You are the Narrator</h3>
+      <h3 className="text-xl font-medium mb-6 text-center">Eres el Narrador</h3>
       
       <form onSubmit={handleSubmit} className="space-y-6 max-w-md mx-auto">
         <div className="space-y-2">
           <label htmlFor="clue" className="block text-sm font-medium">
-            Your Clue
+            Tu Pista
           </label>
           <input
             id="clue"
             type="text"
             value={clue}
             onChange={(e) => setClue(e.target.value)}
-            placeholder="Enter a word, phrase, or sound..."
+            placeholder="Introduce una palabra, frase o sonido..."
             className="w-full px-3 py-2 rounded border border-gray-700 bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary"
             disabled={isLoading}
           />
           <p className="text-xs text-gray-400">
-            Be creative! Not too obvious, but not too obscure.
+            ¡Sé creativo! No demasiado obvio, pero tampoco imposible.
           </p>
         </div>
         
         <div>
-          <h4 className="text-sm font-medium mb-3">Select a card that matches your clue</h4>
+          <h4 className="text-sm font-medium mb-3">Selecciona una carta que encaje con tu pista</h4>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {currentPlayer.hand.map((card: Card) => (
               <div 
@@ -113,10 +113,10 @@ const ClueStep: React.FC = () => {
             {isLoading ? (
               <span className="flex items-center justify-center">
                 <span className="animate-spin h-4 w-4 border-2 border-t-transparent border-white rounded-full mr-2" />
-                Submitting...
+                Enviando...
               </span>
             ) : (
-              'Submit Clue & Card'
+              'Enviar pista y carta'
             )}
           </Button>
         </div>
